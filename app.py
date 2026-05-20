@@ -112,18 +112,33 @@ for msg in st.session_state.messages:
     with st.chat_message(msg["role"], avatar=avatar):
         st.markdown(msg["content"])
 
-# Determine the final user input (either from mic or from text box)
+# --- NEW UI LAYOUT ---
+# Create a small floating container right above the chat input
+st.write("") # Spacer
+col1, col2 = st.columns([1, 5])
+with col1:
+    st.markdown('<div style="margin-top: 10px;">', unsafe_allow_html=True)
+    audio_bytes = audio_recorder(
+        text="", # Removed the text to make it just a clean icon
+        recording_color="#FF0000", 
+        neutral_color="#FFD700", 
+        icon_size="2x"
+    )
+    st.markdown('</div>', unsafe_allow_html=True)
+with col2:
+    st.caption("🎙️ Click the mic to speak, or type below.")
+
+# Determine the final user input
 final_question = None
 
-# Check Voice Input First
+# 1. Process Voice
 if audio_bytes and audio_bytes != st.session_state.last_audio:
     st.session_state.last_audio = audio_bytes
     if not api_key:
-        st.sidebar.error("Please add your Groq API Key.")
+        st.error("Please add your Groq API Key in the sidebar.")
     else:
-        with st.spinner("Listening to your voice..."):
+        with st.spinner("Translating your voice..."):
             try:
-                # Send the raw audio to Groq Whisper API
                 audio_file = ("audio.wav", io.BytesIO(audio_bytes))
                 transcription = client.audio.transcriptions.create(
                     file=audio_file,
@@ -131,19 +146,20 @@ if audio_bytes and audio_bytes != st.session_state.last_audio:
                 )
                 final_question = transcription.text
             except Exception as e:
-                st.sidebar.error(f"Transcription failed: {str(e)}")
+                st.error(f"Transcription failed: {str(e)}")
 
-# Check Text Input Second
+# 2. Process Text
 text_input = st.chat_input("What is troubling your heart today?")
 if text_input:
     final_question = text_input
 
-# Process the input if we have one
+# 3. Generate AI Response
 if final_question:
     if not api_key:
         st.error("Please ensure your Groq API Key is securely added.")
         st.stop()
 
+    # Show the user's question (whether typed or spoken)
     with st.chat_message("user", avatar="🙏"):
         st.markdown(final_question)
     
