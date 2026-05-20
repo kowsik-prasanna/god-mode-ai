@@ -33,9 +33,6 @@ st.markdown("""
         margin-bottom: 30px;
         font-size: 0.95em;
     }
-    [data-testid="stChatInput"] {
-        border-color: #FFD700 !important;
-    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -51,17 +48,6 @@ client = Groq(api_key=api_key) if api_key else None
 
 # Sidebar
 with st.sidebar:
-    st.markdown("### 🎙️ Voice Input")
-    st.write("Speak your question directly to the Divine:")
-    # The audio recorder widget
-    audio_bytes = audio_recorder(
-        text="Click to record", 
-        recording_color="#FF0000", 
-        neutral_color="#FFD700", 
-        icon_size="2x"
-    )
-    
-    st.markdown("---")
     st.markdown("### ⚙️ Settings")
     
     tradition = st.selectbox(
@@ -112,51 +98,12 @@ for msg in st.session_state.messages:
     with st.chat_message(msg["role"], avatar=avatar):
         st.markdown(msg["content"])
 
-# --- NEW UI LAYOUT ---
-# Create a small floating container right above the chat input
+# --- CUSTOM CHAT ROW (Side-by-side Layout) ---
 st.write("") # Spacer
-col1, col2 = st.columns([1, 5])
-with col1:
-    st.markdown('<div style="margin-top: 10px;">', unsafe_allow_html=True)
-    audio_bytes = audio_recorder(
-        text="", # Removed the text to make it just a clean icon
-        recording_color="#FF0000", 
-        neutral_color="#FFD700", 
-        icon_size="2x"
-    )
-    st.markdown('</div>', unsafe_allow_html=True)
-with col2:
-    st.caption("🎙️ Click the mic to speak, or type below.")
 
-# Determine the final user input
-final_question = None
-
-# 1. Process Voice
-if audio_bytes and audio_bytes != st.session_state.last_audio:
-    st.session_state.last_audio = audio_bytes
-    if not api_key:
-        st.error("Please add your Groq API Key in the sidebar.")
-    else:
-        with st.spinner("Translating your voice..."):
-            try:
-                audio_file = ("audio.wav", io.BytesIO(audio_bytes))
-                transcription = client.audio.transcriptions.create(
-                    file=audio_file,
-                    model="whisper-large-v3-turbo",
-                )
-                final_question = transcription.text
-            except Exception as e:
-                st.error(f"Transcription failed: {str(e)}")
-
-# 2. Process Text
-text_input = # --- CUSTOM CHAT ROW ---
-st.write("") # Adds a little space
-
-# Create columns: 85% for text box, 15% for the microphone
 col1, col2 = st.columns([85, 15], vertical_alignment="bottom")
 
 with col1:
-    # A standard text input (user presses 'Enter' to send)
     text_input = st.text_input(
         "Message", 
         label_visibility="collapsed", 
@@ -165,7 +112,6 @@ with col1:
     )
 
 with col2:
-    # The microphone right next to it
     audio_bytes = audio_recorder(
         text="", 
         recording_color="#FF0000", 
@@ -182,7 +128,7 @@ if audio_bytes and audio_bytes != st.session_state.last_audio:
     if not api_key:
         st.error("Please add your Groq API Key.")
     else:
-        with st.spinner("Translating your voice..."):
+        with st.spinner("Listening to your voice..."):
             try:
                 audio_file = ("audio.wav", io.BytesIO(audio_bytes))
                 transcription = client.audio.transcriptions.create(
@@ -203,7 +149,6 @@ if final_question:
         st.error("Please ensure your Groq API Key is securely added.")
         st.stop()
 
-    # Show the user's question
     with st.chat_message("user", avatar="🙏"):
         st.markdown(final_question)
     
@@ -232,4 +177,3 @@ if final_question:
             
         except Exception as e:
             st.error(f"A disruption occurred: {str(e)}")
-
