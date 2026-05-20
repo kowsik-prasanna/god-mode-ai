@@ -149,17 +149,61 @@ if audio_bytes and audio_bytes != st.session_state.last_audio:
                 st.error(f"Transcription failed: {str(e)}")
 
 # 2. Process Text
-text_input = st.chat_input("What is troubling your heart today?")
-if text_input:
+text_input = # --- CUSTOM CHAT ROW ---
+st.write("") # Adds a little space
+
+# Create columns: 85% for text box, 15% for the microphone
+col1, col2 = st.columns([85, 15], vertical_alignment="bottom")
+
+with col1:
+    # A standard text input (user presses 'Enter' to send)
+    text_input = st.text_input(
+        "Message", 
+        label_visibility="collapsed", 
+        placeholder="What is troubling your heart today?",
+        key="custom_text_input"
+    )
+
+with col2:
+    # The microphone right next to it
+    audio_bytes = audio_recorder(
+        text="", 
+        recording_color="#FF0000", 
+        neutral_color="#FFD700", 
+        icon_size="2x"
+    )
+
+# --- PROCESSING LOGIC ---
+final_question = None
+
+# 1. Did they use the microphone?
+if audio_bytes and audio_bytes != st.session_state.last_audio:
+    st.session_state.last_audio = audio_bytes
+    if not api_key:
+        st.error("Please add your Groq API Key.")
+    else:
+        with st.spinner("Translating your voice..."):
+            try:
+                audio_file = ("audio.wav", io.BytesIO(audio_bytes))
+                transcription = client.audio.transcriptions.create(
+                    file=audio_file,
+                    model="whisper-large-v3-turbo",
+                )
+                final_question = transcription.text
+            except Exception as e:
+                st.error(f"Transcription failed: {str(e)}")
+
+# 2. Did they type text and hit enter?
+elif text_input:
     final_question = text_input
 
-# 3. Generate AI Response
+# 3. Generate the AI Response
 if final_question:
     if not api_key:
         st.error("Please ensure your Groq API Key is securely added.")
         st.stop()
 
-    # Show the user's question (whether typed or spoken)
+    # Show the user's question
     with st.chat_message("user", avatar="🙏"):
         st.markdown(final_question)
     
@@ -188,3 +232,4 @@ if final_question:
             
         except Exception as e:
             st.error(f"A disruption occurred: {str(e)}")
+
