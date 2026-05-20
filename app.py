@@ -14,6 +14,13 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 if "last_audio" not in st.session_state:
     st.session_state.last_audio = None
+if "saved_text" not in st.session_state:
+    st.session_state.saved_text = ""
+
+# The Callback Function: Grabs the text, then instantly clears the box
+def submit_text():
+    st.session_state.saved_text = st.session_state.custom_text_input
+    st.session_state.custom_text_input = ""
 
 # Refined CSS
 st.markdown("""
@@ -104,11 +111,12 @@ st.write("") # Spacer
 col1, col2 = st.columns([85, 15], vertical_alignment="bottom")
 
 with col1:
-    text_input = st.text_input(
+    st.text_input(
         "Message", 
         label_visibility="collapsed", 
         placeholder="What is troubling your heart today?",
-        key="custom_text_input"
+        key="custom_text_input",
+        on_change=submit_text  # <--- THIS TRIGGERS THE CLEAR FUNCTION
     )
 
 with col2:
@@ -140,8 +148,9 @@ if audio_bytes and audio_bytes != st.session_state.last_audio:
                 st.error(f"Transcription failed: {str(e)}")
 
 # 2. Did they type text and hit enter?
-elif text_input:
-    final_question = text_input
+elif st.session_state.saved_text:
+    final_question = st.session_state.saved_text
+    st.session_state.saved_text = "" # Wipe it from memory so it doesn't loop
 
 # 3. Generate the AI Response
 if final_question:
