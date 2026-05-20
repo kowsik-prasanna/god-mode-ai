@@ -128,7 +128,7 @@ if question := st.chat_input("What is troubling your heart today?"):
     st.session_state.messages.append({"role": "user", "content": question})
 
     # Dynamically inject the mood into the system prompt (invisible to user UI)
-    dynamic_system_prompt = f"{PROMPTS[tradition]}\n\nThe user's current emotional state is: '{mood}'. Acknowledge this energy and tailor your response accordingly."
+    dynamic_system_prompt = f"{PROMPTS[tradition]}\n\nSystem Note: The user has indicated they are currently feeling '{mood}'. Use this as background context, but if the user just types a simple greeting (like 'hi' or 'hello'), just greet them warmly and ask how you can guide them. Let the user lead the conversation."
 
     # Streaming the response
     with st.chat_message("assistant", avatar="🕊️"):
