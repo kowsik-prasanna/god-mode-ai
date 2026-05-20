@@ -7,6 +7,10 @@ st.set_page_config(
     layout="centered"
 )
 
+# Initialize chat history
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
 # Refined CSS: Kept your beautiful header styling, but let Streamlit handle 
 # the chat bubbles natively for a smoother, modern feel.
 st.markdown("""
@@ -102,9 +106,7 @@ PROMPTS = {
     "Stoic Philosophy": "You are sharing the wisdom of Stoic philosophers — Marcus Aurelius, Epictetus and Seneca. Speak about control, virtue, reason and resilience. Be direct, practical and deeply wise. Help the person focus on what they can control and let go of what they cannot. End with a relevant Stoic quote."
 }
 
-# Initialize chat history
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+
 
 # Render chat history using native Streamlit chat components
 for msg in st.session_state.messages:
